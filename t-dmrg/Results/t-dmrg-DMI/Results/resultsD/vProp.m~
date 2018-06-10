@@ -1,0 +1,11 @@
+
+function vProp()
+
+D = 1.0;
+load(strcat('D',num2str(D),'-00FE.mat'))
+
+
+
+function td = trackTdecay(Szi)
+
+Szi

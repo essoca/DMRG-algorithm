@@ -1,0 +1,44 @@
+
+function [Be_new,mnew] = truncar(Be,rho,err)
+% TRUNCAR - Trunca un bloque DMRG
+%---------------------------------------------------------------
+%    Trunca un bloque alargado existente a la base reducida
+%    La operacion se simboliza como B(l+1,mxd) --> B(l+1,m)
+%---------------------------------------------------------------
+%  Sintaxis:
+%    [Be_new,uPm] = truncar(Be,rho);
+%  Entrada:
+%    Be     : Bloque alargado a truncar
+%    rho    : Matriz densidad reducida del bloque alargado
+%    m      : Numero de autoestados de rho a retener para formar la base
+%             truncada de los bloques alargados
+%  Salida:
+%    Be_new : Bloque truncado
+%    uPm    : Estimativo del error en el truncamiento (1-Pm)
+             
+[vrho wrho] = eig(rho);                   
+[wrho irho] = sort(diag(wrho),'descend'); 
+vrho        = vrho(:,irho);   
+m           = check_tre(wrho,err);
+mnew        = check_m(wrho,m); if mnew>200, mnew=200;end
+O           = vrho(:,1:mnew); 
+
+% Truncamos los operadores del bloque alargado
+HB  = O' * Be.HB  * O; 
+Spb = O' * Be.Spb * O;
+Szb = O' * Be.Szb * O;
+
+% Construir bloque truncado
+Be_new = bloque(Be.l, mnew, HB, Spb, Szb, O);
+
+%=======================================================================
+function m = check_tre(wrho,err)
+% Calcula m segun DBSS
+
+k = 0; uPm = 1-wrho(1);
+while uPm > err
+    k = k+1;
+    uPm = 1-sum(wrho(1:k+1));
+end
+m = k+1;
+%=======================================================================

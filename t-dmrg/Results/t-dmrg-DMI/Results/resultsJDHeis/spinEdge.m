@@ -1,0 +1,71 @@
+
+function spinEdge()
+
+clc, clear all
+J = 1;
+Tc = @(n,m) (2^p(m,n))*m*pi/(0.5*J);
+n = [20,15,10,6,9,11,10,8,7,17,19,9,17,13,14,3,19,17,18,15,4]; 
+m = [19,14,9,5,7,8,7,5,4,9,9,4,7,5,5,1,6,5,5,4,1];
+D = J*sqrt((n./m).^2-1);
+for k = 1:length(m)
+    T(k,1:3) = [D(k),PeriodoJ(n(k),m(k))];
+end
+%errorbar(T(:,1),T(:,2),T(:,3),'ko-','MarkerFaceColor','k','MarkerSize',5)
+plot(T(:,1),T(:,2),'ko','MarkerFaceColor','k','MarkerSize',5)
+hold on
+D = 0.1:0.01:3.9; Dc = 0.45:0.01:3.9;
+plot(D,2*pi./(sqrt((0.5*D).^2+(0.5).^2)+0.5),'k--','LineWidth',1)
+plot(Dc,2*pi./(sqrt((0.5*Dc).^2+(0.5).^2)-0.5),'k-.','LineWidth',1)
+%plot(D,2*pi./(0.5*D),'k','LineWidth',1)
+% % calculado
+% nc = [20,15,10,6]; mc = [19,14,9,5];
+% Dc = J*sqrt((nc./mc).^2-1);
+% for k = 1:4
+%     Tca(k,1:2) = [Dc(k),Tc(nc(k),mc(k))];
+% end
+% plot(Tca(:,1),Tca(:,2),'ks')
+
+%=============================================================
+function T = PeriodoJ(n,m)
+% Mide periodo (temporal o espacial) de la curva Sz
+
+load(strcat('r',int2str(n),'_',int2str(m),'JDz.mat'))
+Sx = Sxprof(1,1:151);
+%plot(Sx,'ko-')
+% Derivada numerica
+for k = 1:length(Sx)-1
+    dSx(k) = Sx(k+1)-Sx(k);
+end
+% Rastrear cambios de signo para hallar minimos y maximos
+c=0;
+for k = 1:length(dSx)-1
+    if dSx(k+1)*dSx(k) < 0
+        c = c+1;
+        ind(c) = k+1;
+    end
+end
+tv = ind(1:2:end);
+% Escoger valles en la curva Szprof
+if length(tv) >= 2
+    for k = 1:length(tv)-1
+        % Hallar periodo
+        tT(k) = tv(k+1)-tv(k);
+    end
+    T(1:2) = [mean(tT),std(tT)];
+elseif length(ind) == 2
+    T(1:2) = [mean(2*ind(1),ind(2)),std(2*ind(1),ind(2))];
+elseif length(ind) == 1
+    T(1:2) = [2*ind(1),0];
+else
+    error('No se puede definir el periodo')
+end
+%=============================================================
+function vp = p(m,n)
+% Funcion paridad simultanea de m y n
+
+if (rem(n,2)==0 && rem(m,2)==0)||(rem(n+1,2)==0 && rem(m+1,2)==0)
+    vp = 0;
+else
+    vp = 1;
+end
+%=============================================================
